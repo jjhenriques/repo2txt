@@ -2,7 +2,7 @@ import { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoCo
 import { extractZipContents } from './zip-utils.js';
 
 // Add at the top of the file with other imports
-let pathZipMap = {};
+window.pathZipMap = {};
 
 // Event listener for directory selection
 document.getElementById('directoryPicker').addEventListener('change', handleDirectorySelection);
@@ -59,7 +59,7 @@ async function handleZipSelection(event) {
 
         // Extract zip contents and update the global pathZipMap
         const { tree, gitignoreContent, pathZipMap: extractedPathZipMap } = await extractZipContents(file);
-        pathZipMap = extractedPathZipMap;  // Update the global variable
+        window.pathZipMap = extractedPathZipMap;  // Update the global variable
         
         // Filter and display the tree
         filterAndDisplayTree(tree, gitignoreContent);

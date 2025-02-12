@@ -1,5 +1,5 @@
 // Display directory structure
-function displayDirectoryStructure(tree) {
+async function displayDirectoryStructure(tree) {
     tree = tree.filter(item => item.type === 'blob').sort(sortContents);
     const container = document.getElementById('directoryStructure');
     container.innerHTML = '';
@@ -25,7 +25,7 @@ function displayDirectoryStructure(tree) {
         });
     });
 
-    function createTreeNode(name, item, parentUl) {
+    async function createTreeNode(name, item, parentUl) {
         const li = document.createElement('li');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -36,7 +36,7 @@ function displayDirectoryStructure(tree) {
             createDirectoryNode(li, checkbox, name, item, parentUl);
         } else {
             // File node
-            createFileNode(li, checkbox, name, item);
+            await createFileNode(li, checkbox, name, item);
         }
 
         li.className = 'my-2';
@@ -67,7 +67,7 @@ function displayDirectoryStructure(tree) {
         addCollapseButtonListener(collapseButton, ul);
     }
 
-    function createFileNode(li, checkbox, name, item) {
+    async function createFileNode(li, checkbox, name, item) {
         checkbox.value = JSON.stringify({ url: item.url, path: item.path, urlType: item.urlType });
         
         const extension = name.split('.').pop().toLowerCase();
@@ -85,6 +85,29 @@ function displayDirectoryStructure(tree) {
         li.appendChild(checkbox);
         appendIcon(li, 'file');
         li.appendChild(document.createTextNode(name));
+
+        // Add loading indicator while counting lines
+        const lineCountSpan = document.createElement('span');
+        lineCountSpan.className = 'text-gray-500 text-sm ml-2';
+        lineCountSpan.textContent = '(counting...)';
+        li.appendChild(lineCountSpan);
+
+        try {
+            // Fetch file content to count lines
+            let response;
+            if (item.urlType === 'zip') {
+                const relativePath = item.path.startsWith('/') ? item.path.slice(1) : item.path;
+                response = await window.pathZipMap[relativePath].async('text');
+            } else {
+                response = await fetch(item.url).then(r => r.text());
+            }
+            const lineCount = response.split('\n').length;
+            lineCountSpan.textContent = `(${lineCount} lines)`;
+            item.lineCount = lineCount; // Store the line count for later use
+        } catch (error) {
+            lineCountSpan.textContent = '(error counting lines)';
+            console.error('Error counting lines:', error);
+        }
     }
 
     function createCollapseButton() {
@@ -132,9 +155,16 @@ function displayDirectoryStructure(tree) {
         return extCheckbox;
     }
 
-    for (const [name, item] of Object.entries(directoryStructure)) {
-        createTreeNode(name, item, rootUl);
-    }
+    // Process the tree asynchronously to handle line counting
+    (async () => {
+        try {
+            for (const [name, item] of Object.entries(directoryStructure)) {
+                await createTreeNode(name, item, rootUl);
+            }
+        } catch (error) {
+            console.error('Error processing tree:', error);
+        }
+    })();
 
     createExtensionCheckboxesContainer();
 
