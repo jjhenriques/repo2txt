@@ -108,29 +108,48 @@ function displayDirectoryStructure(tree) {
             if (isTextFile && item.size > 0) {
                 // Different languages have different average line lengths
                 let avgCharsPerLine = 60; // Default value
+                let charsPerToken = 4.0; // Default tokens per character (average for English)
                 
                 // Adjust based on file type
                 if (['html', 'xml'].includes(extension)) {
                     avgCharsPerLine = 80; // HTML tends to have longer lines
+                    charsPerToken = 4.5;  // HTML has more structural tokens
                 } else if (['py', 'rb'].includes(extension)) {
                     avgCharsPerLine = 40; // Python and Ruby tend to have shorter lines
+                    charsPerToken = 3.5;  // Code tends to have more tokens per character
                 } else if (['js', 'ts', 'jsx', 'tsx'].includes(extension)) {
                     avgCharsPerLine = 50; // JavaScript/TypeScript
+                    charsPerToken = 3.5;  // Code tends to have more tokens per character
                 } else if (['json'].includes(extension)) {
                     avgCharsPerLine = 20; // JSON can have many short lines
+                    charsPerToken = 4.0;  // JSON has lots of quotes and separators
                 } else if (['md', 'txt'].includes(extension)) {
                     avgCharsPerLine = 70; // Markdown and text files tend to have longer lines
+                    charsPerToken = 4.0;  // Plain text
                 }
                 
                 // Estimate line count
                 const estimatedLines = Math.max(1, Math.ceil(item.size / avgCharsPerLine));
                 
+                // Estimate token count
+                const estimatedTokens = Math.max(1, Math.ceil(item.size / charsPerToken));
+                
+                // Format token count for display
+                let tokenText;
+                if (estimatedTokens < 1000) {
+                    tokenText = `${estimatedTokens}`;
+                } else if (estimatedTokens < 1000000) {
+                    tokenText = `${(estimatedTokens / 1000).toFixed(1)}K`;
+                } else {
+                    tokenText = `${(estimatedTokens / 1000000).toFixed(1)}M`;
+                }
+                
                 // Show warning for very large files
                 if (item.size > 100 * 1024) { // Files larger than 100KB
-                    sizeSpan.textContent = `(${sizeText}, ~${estimatedLines} lines) ⚠️`;
+                    sizeSpan.textContent = `(${sizeText}, ~${estimatedLines} lines, ~${tokenText} tokens) ⚠️`;
                     sizeSpan.title = 'Large file - consider excluding from selection';
                 } else {
-                    sizeSpan.textContent = `(${sizeText}, ~${estimatedLines} lines)`;
+                    sizeSpan.textContent = `(${sizeText}, ~${estimatedLines} lines, ~${tokenText} tokens)`;
                 }
             } else {
                 sizeSpan.textContent = `(${sizeText})`;
