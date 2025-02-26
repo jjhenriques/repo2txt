@@ -144,8 +144,8 @@ function displayDirectoryStructure(tree) {
                     tokenText = `${(estimatedTokens / 1000000).toFixed(1)}M`;
                 }
                 
-                // Show warning for very large files
-                if (item.size > 100 * 1024) { // Files larger than 100KB
+                // Show warning for large files
+                if (item.size > 10 * 1024) { // Files larger than 10KB
                     sizeSpan.textContent = `(${sizeText}, ~${estimatedLines} lines, ~${tokenText} tokens) ⚠️`;
                     sizeSpan.title = 'Large file - consider excluding from selection';
                 } else {
