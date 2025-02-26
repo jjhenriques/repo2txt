@@ -85,6 +85,59 @@ function displayDirectoryStructure(tree) {
         li.appendChild(checkbox);
         appendIcon(li, 'file');
         li.appendChild(document.createTextNode(name));
+        
+        // Add file size information
+        if (item.size !== undefined) {
+            const sizeSpan = document.createElement('span');
+            sizeSpan.className = 'ml-2 text-xs text-gray-500';
+            
+            // Format size for display
+            let sizeText;
+            if (item.size < 1024) {
+                sizeText = `${item.size} B`;
+            } else if (item.size < 1024 * 1024) {
+                sizeText = `${(item.size / 1024).toFixed(1)} KB`;
+            } else {
+                sizeText = `${(item.size / (1024 * 1024)).toFixed(1)} MB`;
+            }
+            
+            // Estimate line count for text files based on file type
+            const textFileExtensions = ['js', 'py', 'java', 'cpp', 'html', 'css', 'ts', 'jsx', 'tsx', 'md', 'txt', 'json', 'c', 'h', 'php', 'rb', 'sh'];
+            const isTextFile = textFileExtensions.includes(extension);
+            
+            if (isTextFile && item.size > 0) {
+                // Different languages have different average line lengths
+                let avgCharsPerLine = 60; // Default value
+                
+                // Adjust based on file type
+                if (['html', 'xml'].includes(extension)) {
+                    avgCharsPerLine = 80; // HTML tends to have longer lines
+                } else if (['py', 'rb'].includes(extension)) {
+                    avgCharsPerLine = 40; // Python and Ruby tend to have shorter lines
+                } else if (['js', 'ts', 'jsx', 'tsx'].includes(extension)) {
+                    avgCharsPerLine = 50; // JavaScript/TypeScript
+                } else if (['json'].includes(extension)) {
+                    avgCharsPerLine = 20; // JSON can have many short lines
+                } else if (['md', 'txt'].includes(extension)) {
+                    avgCharsPerLine = 70; // Markdown and text files tend to have longer lines
+                }
+                
+                // Estimate line count
+                const estimatedLines = Math.max(1, Math.ceil(item.size / avgCharsPerLine));
+                
+                // Show warning for very large files
+                if (item.size > 100 * 1024) { // Files larger than 100KB
+                    sizeSpan.textContent = `(${sizeText}, ~${estimatedLines} lines) ⚠️`;
+                    sizeSpan.title = 'Large file - consider excluding from selection';
+                } else {
+                    sizeSpan.textContent = `(${sizeText}, ~${estimatedLines} lines)`;
+                }
+            } else {
+                sizeSpan.textContent = `(${sizeText})`;
+            }
+            
+            li.appendChild(sizeSpan);
+        }
     }
 
     function createCollapseButton() {
