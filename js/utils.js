@@ -86,11 +86,20 @@ async function displayDirectoryStructure(tree) {
         appendIcon(li, 'file');
         li.appendChild(document.createTextNode(name));
 
-        // Add loading indicator while counting lines
-        const lineCountSpan = document.createElement('span');
-        lineCountSpan.className = 'text-gray-500 text-sm ml-2';
-        lineCountSpan.textContent = '(counting...)';
-        li.appendChild(lineCountSpan);
+        // Show file size and add loading indicator
+        const infoSpan = document.createElement('span');
+        infoSpan.className = 'text-gray-500 text-sm ml-2';
+        if (item.size && !isNaN(item.size)) {
+            const size = item.size > 1024 
+                ? item.size > 1024 * 1024 
+                    ? `${(item.size / (1024 * 1024)).toFixed(1)}MB` 
+                    : `${(item.size / 1024).toFixed(1)}KB`
+                : `${item.size}B`;
+            infoSpan.textContent = `(${size}, counting lines...)`;
+        } else {
+            infoSpan.textContent = '(counting...)';
+        }
+        li.appendChild(infoSpan);
 
         try {
             // Fetch file content to count lines
@@ -102,10 +111,20 @@ async function displayDirectoryStructure(tree) {
                 response = await fetch(item.url).then(r => r.text());
             }
             const lineCount = response.split('\n').length;
-            lineCountSpan.textContent = `(${lineCount} lines)`;
+            const sizeText = item.size ? item.size > 1024 
+                ? item.size > 1024 * 1024 
+                    ? `${(item.size / (1024 * 1024)).toFixed(1)}MB` 
+                    : `${(item.size / 1024).toFixed(1)}KB`
+                : `${item.size}B` : '';
+            infoSpan.textContent = sizeText ? `(${sizeText}, ${lineCount} lines)` : `(${lineCount} lines)`;
             item.lineCount = lineCount; // Store the line count for later use
         } catch (error) {
-            lineCountSpan.textContent = '(error counting lines)';
+            const sizeText = item.size ? item.size > 1024 
+                ? item.size > 1024 * 1024 
+                    ? `${(item.size / (1024 * 1024)).toFixed(1)}MB` 
+                    : `${(item.size / 1024).toFixed(1)}KB`
+                : `${item.size}B` : '';
+            infoSpan.textContent = sizeText ? `(${sizeText}, error counting lines)` : '(error counting lines)';
             console.error('Error counting lines:', error);
         }
     }
