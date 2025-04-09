@@ -85,6 +85,31 @@ function displayDirectoryStructure(tree) {
         li.appendChild(checkbox);
         appendIcon(li, 'file');
         li.appendChild(document.createTextNode(name));
+        
+        // Add file size or line count information
+        if (item.size !== undefined) {
+            const sizeText = document.createElement('span');
+            sizeText.className = 'ml-2 text-xs text-gray-500';
+            
+            // Format file size
+            const formattedSize = formatFileSize(item.size);
+            sizeText.textContent = `(${formattedSize})`;
+            
+            li.appendChild(sizeText);
+        }
+    }
+    
+    // Helper function to format file size in KB, MB, etc.
+    function formatFileSize(bytes) {
+        if (bytes < 1024) {
+            return bytes + ' B';
+        } else if (bytes < 1024 * 1024) {
+            return (bytes / 1024).toFixed(1) + ' KB';
+        } else if (bytes < 1024 * 1024 * 1024) {
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        } else {
+            return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+        }
     }
 
     function createCollapseButton() {
